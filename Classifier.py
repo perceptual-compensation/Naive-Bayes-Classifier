@@ -23,6 +23,6 @@ for para in data:
         paraWords.update(w)
         paraSenses.update(s)
         for i in w:
-            sentMatrix[s, i] += 1
+            sentMatrix[np.array(s), i] += 1
     for i in paraWords:
-        paraMatrix[paraSenses, i] += 1
+        paraMatrix[np.array(list(paraSenses)), i] += 1
