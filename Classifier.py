@@ -26,23 +26,30 @@ for para in data:
         sentMatrix[np.ix_(s, w)] += 1
     paraMatrix[np.ix_(list(paraSenses), list(paraWords))] += 1
 
-paraMatrix /= paraMatrix.sum(axis=1)[:, None]
-sentMatrix /= sentMatrix.sum(axis=1)[:, None]
+paraMatrix = np.log(paraMatrix / paraMatrix.sum(axis=1)[:, None])
+sentMatrix = np.log(sentMatrix / sentMatrix.sum(axis=1)[:, None])
 
-np.save("Paragraph matrix.npy", paraMatrix)
-np.save("Sentence matrix.npy", sentMatrix)
+# np.save("Paragraph matrix.npy", paraMatrix)
+# np.save("Sentence matrix.npy", sentMatrix)
 
-def classifier(targetWord, wordBag, source="paragraph"):
+def classifier(targetWord, wordBag, source="paragraph", fullPosterior=False):
     targetSenses = wordSenses[targetWord]
     senseScores = {}
     for s in targetSenses.keys():
+        senseScores[s] = np.log(wordSenses[targetWord][s] / sum(wordSenses[targetWord].values()))
         if source == "word":
-            senseScores[s] = wordSenses[targetWord][s]
             continue
         elif source == "sentence":
             conditionalProb = sentMatrix[senses[s]]
         else:
             conditionalProb = paraMatrix[senses[s]]
-        posterior = senseCounts[s] / senseCountTotal
-        for w in wordBag:
-            
+        senseScores[s] += np.sum(conditionalProb[[words[w] for w in wordBag if words.get(w)]])
+    if not fullPosterior:
+        return sorted(senseScores, key=senseScores.get)[-1]
+    return senseScores
+
+def batchClassifier(wordBag, source="paragraph"):
+    posteriorSenses = []
+    for word in wordBag:
+        posteriorSenses.append(classifier(word, wordBag, source))
+    return posteriorSenses

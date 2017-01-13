@@ -14,26 +14,19 @@ wordSenses = {}
 with open("All files", "rt") as inFile:
     lines = inFile.read().split("\n")
 
-tblFile = open("Bag of words table", "wt")
+#tblFile = open("Bag of words table", "wt")
 
 for line in lines:
     if paraMatch.search(line):
-        if data:
-            data[-1][-1]["Words"] = list(data[-1][-1]["Words"])
-            data[-1][-1]["Senses"] = list(data[-1][-1]["Senses"])
         data.append([])
     elif sentMatch.search(line):
         sentence += 1
-        if data[-1]:
-            data[-1][-1]["Words"] = list(data[-1][-1]["Words"])
-            data[-1][-1]["Senses"] = list(data[-1][-1]["Senses"])
-        data[-1].append({"Words" : set(), "Senses" : set()})
+        data[-1].append({"Words" : [], "Senses" : []})
     elif wordMatch.search(line):
         word = wordMatch.search(line).groups()[0]
         senses = senseMatch.search(line).groups()[0].split(";")
         if not wordSenses.get(word):
             wordSenses[word] = {}
-        data[-1][-1]["Words"].add(word)
         for sense in senses:
             if not senseCount.get(sense):
                 senseCount[sense] = 0
@@ -41,14 +34,12 @@ for line in lines:
             if not wordSenses[word].get(sense):
                 wordSenses[word][sense] = 0
             wordSenses[word][sense] += 1
-            data[-1][-1]["Senses"].add(sense)
-            tblFile.write("\t".join((str(len(data)), str(sentence), 
-                    word, sense)) + "\n")
+            data[-1][-1]["Words"].append(word)
+            data[-1][-1]["Senses"].append(sense)
+            #tblFile.write("\t".join((str(len(data)), str(sentence), 
+            #        word, sense)) + "\n")
 
-tblFile.close()
-
-data[-1][-1]["Words"] = list(data[-1][-1]["Words"])
-data[-1][-1]["Senses"] = list(data[-1][-1]["Senses"])
+#tblFile.close()
 
 with open("Results.json", "wt") as f:
     f.write(json.dumps(data, sort_keys=True, indent=4))
